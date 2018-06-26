@@ -4,10 +4,8 @@
 Takes 1D reads and their alignments and defines high confidence isoforms. 
 
 
-You will need your reads in fastq AND fasta format and alignments of the reads to a genome in sam AND psl format. We require you to use minimap2 and then convert the sam file it produces to psl format using the sam2psl tool from jvarkit. The psl files are easier to parse but the sam file contains information of read alignment direction (ts:A: flag).
-The reason for needing both fastq and fasta is because this version of Mandalorion was written for R2C2 reads which come in fasta format and had fastq subreads.
-
-
+You will need your reads in fastq AND fasta format and alignments of the reads to a genome in sam AND psl format. 
+The reason for needing both fastq and fasta is because this version of Mandalorion was written for R2C2 reads which come in fasta format and had fastq subreads. We require you to use minimap2 and then convert the sam file it produces to psl format using the sam2psl tool from jvarkit. The psl files are easier to parse but the sam file contains information of read alignment direction (ts:A: flag).
 
 - [sam2psl](http://lindenb.github.io/jvarkit/SamToPsl.html)
 
