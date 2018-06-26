@@ -6,7 +6,7 @@ import sys
 import os
 import argparse
 import numpy as np
-
+import random
 # path = sys.argv[1]
 # temp_folder = path + '/parsed_reads'
 # subsample = int(sys.argv[2])
@@ -98,7 +98,7 @@ def read_fastq_file(seq_file):
     seq_file_open = open(seq_file, 'r')
     while lineNum < length:
         name_root = seq_file_open.readline().strip()[1:].split('_')
-        name, seed = name_root[0], int(name_root[1])
+        name = name_root[0]
         seq = seq_file_open.readline().strip()
         plus = seq_file_open.readline().strip()
         qual = seq_file_open.readline().strip()
@@ -108,7 +108,7 @@ def read_fastq_file(seq_file):
             quals.append(number)
         average_quals = np.average(quals)
         seq_length = len(seq)
-        read_list.append((name, seed, seq, qual, average_quals, seq_length))
+        read_list.append((name, seq, qual, average_quals, seq_length))
         lineNum += 4
     return read_list
 
@@ -151,8 +151,8 @@ def determine_consensus(name, fasta, fastq):
         subsample_fastq_reads.append(fastq_reads[index])
 
     for read in subsample_fastq_reads:
-        out.write('@' + read[0] + '_' + str(read[1]) + '\n'
-                  + read[2] + '\n+\n' + read[3] + '\n')
+        out.write('@' + read[0]  + '\n'
+                  + read[1] + '\n+\n' + read[2] + '\n')
     out.close()
 
     poa_cons = temp_folder + '/consensus.fasta'
@@ -163,11 +163,8 @@ def determine_consensus(name, fasta, fastq):
     max_coverage = 0
     reads = read_fasta(out_F)
     repeats = str(len(reads))
-    for read in reads:
-        coverage = int(read.split('_')[3])
-        if coverage > max_coverage:
-             best = read
-             max_coverage = coverage
+
+    best=random.choice(list(reads))  
 
     out_cons_file = open(poa_cons, 'w')
     out_cons_file.write('>' + best + '\n'
@@ -176,7 +173,7 @@ def determine_consensus(name, fasta, fastq):
 
 
     final = poa_cons
-    for i in np.arange(1, 2):
+    for i in np.arange(1, 3):
         try:
             if i == 1:
                 input_cons = poa_cons

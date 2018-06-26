@@ -11,7 +11,7 @@ content_file = sys.argv[1]
 upstream_buffer = int(sys.argv[4])
 downstream_buffer = int(sys.argv[3])
 
-minimum_read_count = 3
+minimum_read_count = 1
 
 def find_peaks(starts, ends):
     start_peaks = {}
@@ -71,9 +71,7 @@ def sort_reads_into_splice_junctions(content_file, splice_dict,
         a = line.strip().split('\t')
         chromosome, read_direction = a[13], a[8]
         name = a[9].split('_')[0]
-        coverage = float(a[9].split('_')[3])
-        qual = float(a[9].split('_')[1])
-        read_direction = a[8]
+        read_direction = '+' ### Ignores read direction
         start, end = int(a[15]), int(a[16])
 
         if read_direction == '+':
@@ -100,11 +98,15 @@ def sort_reads_into_splice_junctions(content_file, splice_dict,
                         failed = True
                     try:
                         right_splice_site = splice_dict[chromosome][right_splice]
+                        
                     except:
                         failed = True
                     if not failed:
                         identity += str(left_splice_site) + '-' \
                                     + str(right_splice_site) + '~'
+                    if '5r133331' in identity:
+                        print(identity,failed)
+
         if not failed:
             if not start_end_dict.get(identity):
                 start_end_dict[identity] = []
@@ -122,12 +124,23 @@ def define_start_end_sites(start_end_dict, individual_path, subreads):
     isoform_counter, isoform_dict = 0, {}
 
     for identity in start_end_dict:
+        if '5r133331' in identity:
+            print(identity)       
+
         # if 'chr16' in identity:
         #     print(identity)
         positions = np.array(start_end_dict[identity])
         starts = np.array(positions[:,0], dtype=int)
         ends = np.array(positions[:,1], dtype=int)
+        if '5r133331' in identity:
+            print(identity,starts,ends) 
+
+
         start_dict, end_dict =find_peaks(starts, ends)
+        if '5r133331' in identity:
+            print(identity,start_dict,end_dict) 
+
+
         matched_positions = []
         combination_counts = {}
         left_extras[identity], right_extras[identity] = {}, {}
@@ -153,13 +166,14 @@ def define_start_end_sites(start_end_dict, individual_path, subreads):
         for left, right, read, read_direction in matched_positions:
             medianLeft = np.median(left_extras[identity][(left, right)])
             medianRight = np.median(right_extras[identity][(left, right)])
-            new_identity = identity + '_' + read_direction + '_' + str(left) \
+            new_identity = identity + '_' + str(left) \
                            + '_' + str(right) + '_' \
                            + str(round(medianLeft, 2)) \
                            + '_' + str(round(medianRight, 2))
             if not isoform_dict.get(new_identity):
                 isoform_counter += 1
                 isoform_dict[new_identity] = isoform_counter
+
 
             filename='Isoform'+str(isoform_dict[new_identity])
 
@@ -174,7 +188,7 @@ def define_start_end_sites(start_end_dict, individual_path, subreads):
                          + '.fasta' + '\t' + individual_path
                          + '/parsed_reads/' + filename + '_subreads.fastq'
                          + '\t' + new_identity + '\n')
-            read = read.split('_')[0][1:]
+            read = read.split('\n')[0][1:]
             subread_list = subreads[read]
             for subread, sequence, qual in subread_list:
                 out_reads_subreads.write(subread + '\n' + sequence

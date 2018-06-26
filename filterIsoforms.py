@@ -45,31 +45,31 @@ count = {}
 for isoform in isoforms:
     parts = isoform.split('_')
     chromosome = parts[0]
-    direction = parts[2]
-    start = int(parts[3])
-    end = int(parts[4])
+#    direction = parts[2]
+    start = int(parts[2])
+    end = int(parts[3])
     number = int(parts[-1])
 
     for base in np.arange(start, end):
-        if not count.get(chromosome + '_' + direction):
-            count[chromosome + '_' + direction] = {}
-        if not count[chromosome + '_' + direction].get(base):
-            count[chromosome + '_' + direction][base] = number
+        if not count.get(chromosome):
+            count[chromosome] = {}
+        if not count[chromosome].get(base):
+            count[chromosome][base] = number
         else:
-            count[chromosome + '_' + direction][base] += number
+            count[chromosome][base] += number
 
 for isoform in isoforms:
     parts = isoform.split('_')
     chromosome = parts[0]
-    direction = parts[2]
-    start = int(parts[3])
-    end = int(parts[4])
+
+    start = int(parts[2])
+    end = int(parts[3])
     number = int(parts[-1])
     coverage_list = []
-    overhang5 = float(parts[5])
-    overhang3 = float(parts[6])
+    overhang5 = float(parts[4])
+    overhang3 = float(parts[5])
     for base in np.arange(start, end):
-        coverage_list.append(count[chromosome + '_' + direction][base])
+        coverage_list.append(count[chromosome][base])
 
     max_coverage = max(coverage_list)
     if minimum_3_overhang <= overhang3 <= maximum_3_overhang \

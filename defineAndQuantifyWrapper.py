@@ -46,7 +46,7 @@ minimum_3_overhang = args.minimum_3_overhang
 maximum_5_overhang = args.maximum_5_overhang
 maximum_3_overhang = args.maximum_3_overhang
 
-os.system('python3 spliceSites.py %s %s %s %s %s ' %(content_file, path, '0.05', genome_annotation, 'g'))
+#os.system('python3 spliceSites.py %s %s %s %s %s ' %(content_file, path, '0.1', genome_annotation, 'g'))
 os.system('python3 defineAndQuantifyIsoforms.py %s %s %s %s' %(content_file, path,downstream_buffer,upstream_buffer)) # This script sort raw reads into isoform bins. The two number variables determine the window around TSS and TES in which read ends can fall and still be matched to the site.
 
 for line in open(content_file):

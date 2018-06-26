@@ -12,8 +12,8 @@ genome_file = sys.argv[4]
 refine = sys.argv[5]
 
 minimum_read_count = 3
-minimum_read_coverage = 2
-splice_site_width = 5
+
+splice_site_width = 10
 
 def scan_for_best_bin(entry, distance_range, iterator_shift, density_dict,
                       base_cutoff_min, base_cutoff_max,
@@ -137,11 +137,13 @@ def find_peaks(density_dict, out, peaks, reverse, cutoff, base_cutoff_min,
     for entry in density_dict:
       entry_list.append([entry, density_dict[entry]])
 
+
     for entry, density in sorted(entry_list,
                                  key=lambda x: sum(np.array(x[1])[:,2]),
                                  reverse=True):
-        if len(density) >= minimum_read_count \
-           and not peak_areas[chromosome][side].get(entry):
+        
+        if len(density) >= minimum_read_count:
+          if not peak_areas[chromosome][side].get(entry):
 
             best_extra_list, peak_center, bases, \
             coverage_area, best_direction_l, best_direction_r \
@@ -153,7 +155,7 @@ def find_peaks(density_dict, out, peaks, reverse, cutoff, base_cutoff_min,
             coverage, coverage_area \
             = determine_coverage(coverage_area, chromosome, reverse,
                                  peak_center, histo_coverage)
-
+         
             if coverage > 0:
                 proportion = round(sum(best_extra_list)/coverage, 3)
                 print(chromosome + '\t' + str(peak_center - 1) + '\t'
@@ -215,26 +217,28 @@ def collect_reads(content_file):
     chromosome_list_left, chromosome_list_right = set(), set()
     histo_coverage = {}
     base_cutoff_min, base_cutoff_max = 0, 5
-
+    
     for line in open(content_file):
         total = 0
         b = line.strip().split('\t')
         infile = b[0]
-
+        sam_file = b[4]
         length = 0
-
+        direction_dict=get_alignment_direction(sam_file)
         for line in open(infile):
             total += 1
             a = line.strip().split('\t')
             chromosome = a[13]
+            name=a[9].split('_')[0]
+            if direction_dict.get(name):
+                direction=direction_dict[name]
+                if not histo_coverage.get(chromosome):
+                    histo_coverage[chromosome] = {}
 
-            if not histo_coverage.get(chromosome):
-                histo_coverage[chromosome] = {}
-
-            score, direction, name = int(a[0]), a[8], a[9]
-            coverage = int(name.split('_')[3])
-            if coverage >= minimum_read_coverage:
-                length=int(name.split('_')[5].split('|')[0])
+                score, direction, name,length = int(a[0]), a[8], a[9], int(a[10])
+    #            coverage = int(name.split('_')[3])
+    #            if coverage >= minimum_read_coverage:
+                
                 begin, span = int(a[15]), int(a[16])
                 blocksizes = a[18].split(',')[:-1]
                 blockstarts = a[20].split(',')[:-1]
@@ -374,7 +378,7 @@ def parse_genome(input_file, left_bounds, right_bounds):
                     left_bounds[chromosome]['3'].append(int(entry[2]))
     return left_bounds, right_bounds
 
-def make_genome_bins(bounds, side, peaks, chromosome, peak_areas):
+def make_genome_bins(bounds, side, peaks, chromosome, peak_areas,out):
     '''
     Insert docstring
     '''
@@ -435,47 +439,64 @@ def make_genome_bins(bounds, side, peaks, chromosome, peak_areas):
 
     return peaks, peak_areas
 
-left_bounds = {}
-right_bounds = {}
 
-left_bounds, right_bounds = parse_genome(genome_file, left_bounds, right_bounds)
+def get_alignment_direction(sam_file):
+    direction_dict={}
+    for line in open(sam_file):
+        if line[0]!='@':
+            a=line.strip().split('\t')
+            read_name=a[0]
+            for entry in a[10:]:
+                if 'ts:A:' in entry:
+                    direction=entry.split('ts:A:')[1]
+                    direction_dict[read_name]=direction
+    return direction_dict
 
-Left_Peaks = 0
-Right_Peaks = 0
+def main():
+    left_bounds = {}
+    right_bounds = {}
 
-histo_left_bases, histo_right_bases, \
-chromosome_list, histo_coverage = collect_reads(content_file)
-out = open(out_path + '/SS.bed', 'w')
+    left_bounds, right_bounds = parse_genome(genome_file, left_bounds, right_bounds)
 
-peak_areas = {}
-print(chromosome_list)
-for chromosome in chromosome_list:
-    peak_areas[chromosome] = {}
-    peak_areas[chromosome]['l'] = {}
-    peak_areas[chromosome]['r'] = {}
-    print(chromosome)
-    if 'g' in refine:
+    Left_Peaks = 0
+    Right_Peaks = 0
+
+    histo_left_bases, histo_right_bases, \
+    chromosome_list, histo_coverage = collect_reads(content_file)
+    out = open(out_path + '/SS.bed', 'w')
+
+    peak_areas = {}
+    print(chromosome_list)
+    for chromosome in chromosome_list:
+        peak_areas[chromosome] = {}
+        peak_areas[chromosome]['l'] = {}
+        peak_areas[chromosome]['r'] = {}
+        print(chromosome)
+        if 'g' in refine:
+            Left_Peaks_old = Left_Peaks
+            Right_Peaks_old = Right_Peaks
+            Left_Peaks, peak_areas = make_genome_bins(left_bounds[chromosome], 'l',
+                                                      Left_Peaks, chromosome, peak_areas,out)
+            Right_Peaks, peak_areas = make_genome_bins(right_bounds[chromosome], 'r',
+                                                       Right_Peaks, chromosome, peak_areas,out)
+            print('Annotation-Based',
+                  Left_Peaks - Left_Peaks_old,
+                  Right_Peaks - Right_Peaks_old)
         Left_Peaks_old = Left_Peaks
         Right_Peaks_old = Right_Peaks
-        Left_Peaks, peak_areas = make_genome_bins(left_bounds[chromosome], 'l',
-                                                  Left_Peaks, chromosome, peak_areas)
-        Right_Peaks, peak_areas = make_genome_bins(right_bounds[chromosome], 'r',
-                                                   Right_Peaks, chromosome, peak_areas)
-        print('Annotation-Based',
+        Left_Peaks, peak_areas = find_peaks(histo_left_bases[chromosome],
+                                            out, Left_Peaks, True, cutoff,
+                                            0, 5, histo_coverage, 'l',
+                                            peak_areas, chromosome)
+        Right_Peaks, peak_areas = find_peaks(histo_right_bases[chromosome],
+                                             out, Right_Peaks, False, cutoff,
+                                             0, 5, histo_coverage, 'r',
+                                             peak_areas, chromosome)
+        print('Read-Based',
               Left_Peaks - Left_Peaks_old,
               Right_Peaks - Right_Peaks_old)
-    Left_Peaks_old = Left_Peaks
-    Right_Peaks_old = Right_Peaks
-    Left_Peaks, peak_areas = find_peaks(histo_left_bases[chromosome],
-                                        out, Left_Peaks, True, cutoff,
-                                        0, 5, histo_coverage, 'l',
-                                        peak_areas, chromosome)
-    Right_Peaks, peak_areas = find_peaks(histo_right_bases[chromosome],
-                                         out, Right_Peaks, False, cutoff,
-                                         0, 5, histo_coverage, 'r',
-                                         peak_areas, chromosome)
-    print('Read-Based',
-          Left_Peaks - Left_Peaks_old,
-          Right_Peaks - Right_Peaks_old)
-print(Left_Peaks)
-print(Right_Peaks)
+    print(Left_Peaks)
+    print(Right_Peaks)
+
+main()
+
