@@ -1,12 +1,13 @@
 # Mandalorion Episode II #
 *Attack of the Isoforms*
 
-Takes R2C2/C3POa data and defines high confidence isoforms. 
+Takes 1D reads and their alignments and defines high confidence isoforms. 
 
-We plan to ultimately support straight up ONT 1D and 1D2 reads or PacBio reads but for now reads will have to be in the format C3POa produces
 
-C3POa produces fasta file containing consensus reads as well as a fastq file containing subreads. 
-You will need both of those files as well as alignments of the consensus reads to a genome. We recommend you use minimap2 and then convert the sam file it produces to psl format using the sam2psl tool from jvarkit.
+You will need your reads in fastq AND fasta format and alignments of the reads to a genome in sam AND psl format. We require you to use minimap2 and then convert the sam file it produces to psl format using the sam2psl tool from jvarkit. The psl files are easier to parse but the sam file contains information of read alignment direction (ts:A: flag).
+The reason for needing both fastq and fasta is because this version of Mandalorion was written for R2C2 reads which come in fasta format and had fastq subreads.
+
+
 
 - [sam2psl](http://lindenb.github.io/jvarkit/SamToPsl.html)
 
@@ -40,7 +41,7 @@ The main output file is the Isoform_Consensi_filtered.fasta file that is generat
 
 tab-delimited file containing information for all samples you want to analyze.
 Each sample should have in one line (separated by tabs):
-/path/to/alignments.psl /path/to/reads.fasta /path/to/output/ /path/to/subreads.fastq 
+/path/to/alignments.psl[tab]/path/to/reads.fasta[tab]/path/to/output/[tab]/path/to/reads.fastq[tab]/path/to/alignments.sam
 
 -f, --config_file
 
