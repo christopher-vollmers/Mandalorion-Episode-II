@@ -1,4 +1,4 @@
-# Mandalorion Episode II - 1D fork#
+# Mandalorion Episode II - 1D fork #
 *Attack of the Isoforms*
 
 This is an experimental fork of the Mandalorion Episode II pipeline originally intended for mnore accurate R2C2 reads.
