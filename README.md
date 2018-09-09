@@ -1,6 +1,7 @@
-# Mandalorion Episode II #
+# Mandalorion Episode II - 1D fork#
 *Attack of the Isoforms*
 
+This is an experimental fork of the Mandalorion Episode II pipeline originally intended for mnore accurate R2C2 reads.
 Takes 1D reads and their alignments and defines high confidence isoforms.
 Mandalorion makes the assumption that these reads are complete and contain some form of adapters at their very ends (~30nt that won't align on either end)
 
