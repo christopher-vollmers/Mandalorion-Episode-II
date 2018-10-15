@@ -208,13 +208,13 @@ def find_peaks(density_dict, out, peaks, reverse, cutoff, base_cutoff_min,
 
     return peaks, peak_areas
 
-def collect_reads(content_file):
+def collect_reads(content_file,chromosome_list):
     '''
     Insert docstring
     '''
 
     histo_left_bases, histo_right_bases = {}, {}
-    chromosome_list_left, chromosome_list_right = set(), set()
+    chromosome_list_left, chromosome_list_right = chromosome_list, chromosome_list
     histo_coverage = {}
     base_cutoff_min, base_cutoff_max = 0, 5
     
@@ -341,7 +341,7 @@ def parse_genome(input_file, left_bounds, right_bounds):
     '''
     Insert docstring
     '''
-
+    chromosome_list=set()
     gene_dict = {}
     for line in open(input_file):
         a = line.strip().split('\t')
@@ -376,7 +376,7 @@ def parse_genome(input_file, left_bounds, right_bounds):
                     left_bounds[chromosome]['5'].append(int(entry[2]))
                 if entry[3] == '-':
                     left_bounds[chromosome]['3'].append(int(entry[2]))
-    return left_bounds, right_bounds
+    return chromosome_list, left_bounds, right_bounds
 
 def make_genome_bins(bounds, side, peaks, chromosome, peak_areas,out):
     '''
@@ -456,13 +456,13 @@ def main():
     left_bounds = {}
     right_bounds = {}
 
-    left_bounds, right_bounds = parse_genome(genome_file, left_bounds, right_bounds)
+    chromosome_list,left_bounds, right_bounds = parse_genome(genome_file, left_bounds, right_bounds)
 
     Left_Peaks = 0
     Right_Peaks = 0
 
     histo_left_bases, histo_right_bases, \
-    chromosome_list, histo_coverage = collect_reads(content_file)
+    chromosome_list, histo_coverage = collect_reads(content_file,chromosome_list)
     out = open(out_path + '/SS.bed', 'w')
 
     peak_areas = {}
@@ -471,7 +471,14 @@ def main():
         peak_areas[chromosome] = {}
         peak_areas[chromosome]['l'] = {}
         peak_areas[chromosome]['r'] = {}
+        if not left_bounds.get(chromosome):
+            left_bounds[chromosome]={}
+            left_bounds[chromosome]['5'],left_bounds[chromosome]['3']=[],[]
+        if not right_bounds.get(chromosome):
+            right_bounds[chromosome]={}
+            right_bounds[chromosome]['5'],right_bounds[chromosome]['3']=[],[]
         print(chromosome)
+
         if 'g' in refine:
             Left_Peaks_old = Left_Peaks
             Right_Peaks_old = Right_Peaks
