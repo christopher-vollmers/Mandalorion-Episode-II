@@ -190,7 +190,7 @@ def determine_consensus(name, fasta, fastq):
                       %s %s > %s 2> ./minimap2_messages.txt'
                       % (minimap2, input_cons, out_Fq, overlap))
             print('minimap2 done')
-            os.system('%s --sam --bq 5 -t 1\
+            os.system('%s -q 5 -t 1\
                       %s %s %s %s >> ./racon_messages.txt 2>&1'
                       %(racon,out_Fq, overlap, input_cons, output_cons))
             print('racon done')
