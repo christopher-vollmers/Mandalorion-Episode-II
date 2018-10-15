@@ -124,21 +124,22 @@ def define_start_end_sites(start_end_dict, individual_path, subreads):
     isoform_counter, isoform_dict = 0, {}
 
     for identity in start_end_dict:
-        if '5r133331' in identity:
-            print(identity)       
 
-        # if 'chr16' in identity:
-        #     print(identity)
-        positions = np.array(start_end_dict[identity])
-        starts = np.array(positions[:,0], dtype=int)
-        ends = np.array(positions[:,1], dtype=int)
-        if '5r133331' in identity:
-            print(identity,starts,ends) 
+
+
+
+        starts=[]
+        ends=[]
+        positions = start_end_dict[identity]
+        print(identity, len(positions)) 
+        for position in positions:
+            starts.append(int(position[0]))
+            ends.append(int(position[1]))
+
 
 
         start_dict, end_dict =find_peaks(starts, ends)
-        if '5r133331' in identity:
-            print(identity,start_dict,end_dict) 
+
 
 
         matched_positions = []
@@ -175,7 +176,10 @@ def define_start_end_sites(start_end_dict, individual_path, subreads):
                 isoform_dict[new_identity] = isoform_counter
 
 
-            filename='Isoform'+str(isoform_dict[new_identity])
+            subfolder = str(int(isoform_dict[new_identity]/4000))
+            if subfolder not in os.listdir(individual_path+'/parsed_reads/'):
+                os.makedirs(individual_path +'/parsed_reads/'+ subfolder)
+            filename = subfolder + '/Isoform' + str(isoform_dict[new_identity])
 
             out_reads_fasta = open(individual_path + '/parsed_reads/'
                                    + filename + '.fasta', 'a')
@@ -234,7 +238,7 @@ def main():
       individual_path = b[2]
       subreads_file = b[3]
       os.system('mkdir ' + individual_path + '/parsed_reads')
-      os.system('rm ' + individual_path + '/parsed_reads/*')
+      os.system('rm -r ' + individual_path + '/parsed_reads/*')
       subreads = read_subreads(subreads_file, infile)
       splice_dict = splice_dict = collect_splice_events(path)
       start_end_dict = sort_reads_into_splice_junctions(content_file, splice_dict,
