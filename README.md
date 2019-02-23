@@ -1,3 +1,8 @@
+
+### There are now other options for isoform analysis based off of standard ONT reads, although I have no idea why someone would use those instead of our R2C2 protocol (#circles). I will not longer work on this fork of the Mandalorion pipeline whose main branch is exclusively maintained for the analysis of R2C2 reads. In any case, I highly recommend the FLAIR (https://github.com/BrooksLabUCSC/flair) algorithm developed and maintained by the Brooks lab at UCSC. ###
+
+
+
 # Mandalorion Episode II - 1D fork #
 *Attack of the Isoforms*
 
